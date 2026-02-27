@@ -1,11 +1,6 @@
 const { app } = require('@azure/functions');
 const User = require('../lib/User');
-
-const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': 'http://localhost:8081',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-};
+const { getCorsHeaders, preflightResponse } = require('../lib/cors');
 
 app.http('guestLogin', {
     methods: ['POST', 'OPTIONS'],
@@ -14,10 +9,7 @@ app.http('guestLogin', {
     handler: async (request, context) => {
         context.log('Processing guest login request');
         if (request.method === 'OPTIONS') {
-            return {
-                status: 204,
-                headers: CORS_HEADERS
-            };
+            return preflightResponse(request);
         }
 
         try {
@@ -32,7 +24,7 @@ app.http('guestLogin', {
 
             return {
                 status: 200,
-                headers: CORS_HEADERS,
+                headers: getCorsHeaders(request),
                 jsonBody: {
                     id: user.id,
                     name: user.name,
@@ -45,7 +37,7 @@ app.http('guestLogin', {
             context.error('Guest login failed', error);
             return {
                 status: 500,
-                headers: CORS_HEADERS,
+                headers: getCorsHeaders(request),
                 jsonBody: {
                     message: error.message || 'Internal Server Error'
                 }
